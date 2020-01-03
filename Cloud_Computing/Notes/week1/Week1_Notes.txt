@@ -1,5 +1,46 @@
+* Cloud Computing:
 
+Defn.: Storage + Compute Cycles 
 
-Distributed System:
+Features:
+1. Massive Scale 
+2. On-Demand Access: 
+	- Pay as you go
+	- Anyone can access it anytime
+3. Data Intensive nature
+4. New Cloud computing paradigms: 
+	- MapReduce(Google)/Hadoop
+	- NoSQL, Cassandra, MongoDB
 
-A distributed system, this definition says, is a distributed system is a collection of entities, each of these entities being autonomous, programmable, asynchronous and failure-prone, and these entities communicate through an unreliable communication medium.
+For a new problem to solve any of these problems must be present or else the soultion to the problem already exists.
+
+* On-Demand Access:  "*aaS Classifications"
+
+1. HaaS: Hardware as a service
+	- Access to barebone hardware machines 
+	- Use for whatever purpose needed. eg. Clusters 
+2. IaaS: Infrastructure as a service
+	- Flexible computing and storage infrastructures as VMs
+	- AWS(EC2:Elastic compute cloud, S3 : Simple Storage Service), MS Azure
+3. PaaS: Platform as a Service
+	- A form of IaaS
+	- No access to VM directly, but can write code and integrate to sotftware platform
+	- Google's App Engine
+4. SaaS: Software as a Service
+	- Access to software services when needed
+	- Google Docs, MS Office 365 etc.
+
+* Data-Intensive Computing:
+1. Computation Intensive uses fair amount of data but high amount of computations on data.
+2. Data Intensive stores huge amopunt of data at data centres and has compute node nearby which is used for computations on the data
+
+* Distributed System:
+
+Defn.: A distributed system, this definition says, is a distributed system is a collection of entities, each of these entities being autonomous, programmable, asynchronous and failure-prone, and these entities communicate through an unreliable(delayed, lost updates) communication medium.
+
+- In a distributed system 1000's of processes are running simultaneously and communicating with each other. 
+
+- Cloud is a distributed System.
+- Server comminicate with each other
+- Server communitcate with client and vice versa
+- Client communicate with each others (BitTorrent)

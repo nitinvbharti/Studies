@@ -44,3 +44,49 @@ Defn.: A distributed system, this definition says, is a distributed system is a 
 - Server comminicate with each other
 - Server communitcate with client and vice versa
 - Client communicate with each others (BitTorrent)
+
+* MapReduce : 
+
+The term Map and reduce is borrowed from functional language Lisp.
+
+=> Lisp:
+
+1. map square '(1 2 3 4)
+	out: 1 4 9 16
+2. reduce +'(1 4 9 16)
+	out: 30
+MapReduce Features:
+
+1. map: processes each record sequentially and independently. Process individual records to generate intermediate key/value pairs.Can process individual records parallelly for large data.
+	- Output is sorted (Quicksort)
+2. reduce: processes set of recordes in batches. It processess and merges all intermediate values associated per key. 
+	- Input is sorted(Merge Sort)
+
+Hash Partitioniong: To create reduce tasks. Key is assigned as reduce # = hash(key)/# of reduce servers available
+
+=> MapReduce Inside:
+
+1. Parallelize map: Each map task run independently and parallel to other map tasks on server
+2. Transfer data from Map to Reduce: All Map outputs of same key are assigned same reduce funtion and remaining handled with Hash Partitioning to do reduce
+3. Parallelize reduce: Each reduce task runs independently and parallely to others tasks
+4. Implement storage for Map input, Map output, Reduce Input and Redice Output.
+	- Map Input : From distributed file system storage
+	- Map Output: To local disk at map node(local file system)
+	- Reduce Input: From remote disks (local file system)
+	- Reduce Output: To distributed file system
+
+=> Fault Tolerence:
+Server Failure:
+1. NM(Node Mangaer) heartbeats to RM(Resource Manager). If server fails, RM lets all affected AM(applicaion manager) know and take action
+2. NM keeps track of each task running at its server. If tasks fail mark the task as idle and restart it
+3. AM hearbeats to RM. On failure RM restarts AM which syncs up with running tasks
+
+RM > NM > AM
+
+4. RM failure: Use old checkpoints and bring up secondary RM 
+
+- Speculative Execution: Perform backup execution in case slower machines are present, task is completed wwhen any of the replica tasks completes.
+
+- MapReduce attempts to schedule map tasks on the machines that contains the replica of the input data to save time or else on the same rack if earlier condition not met or any palce if none condition fulfils.
+
+- GFS/HDFS save 3 replicas of same data 2 on same rack and 1 on other.

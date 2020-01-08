@@ -1,0 +1,35 @@
+* Gossip:
+
+=> Multicast: A process/node or wants to share information with some other processes/nodes. This sharing is multicast.
+Issues: 
+- Nodes may crash
+- Packets may be dropped
+
+IP multicast is availabe in routers and swithces. 
+
+Mehods:
+1. Centralized
+2. Tree-Based
+
+
+=> Push Gossip: At sender periodically sender selects n targets to send copy of message and sends them messages. Can be sent over UDP. Marks the nodes as infected that recieves the message and then the marked nodes also acts as the sender by sending the copy of messages periodically along with the previous senders. Since number of sender nodes keep on increasing some nodes recieves multiple copies of same message to which wastage happens. When all the nodes are infected message sending is stopped. This is an example of "Push" gossip protcol. 
+
+Multiple Messages:
+1. Random: Gossip random subset of message each time
+2. Recent: Gossip recent message received message.
+3. Priority: Gossip the message with highest prority
+
+=> Pull Gossip: Periodically poll a few randomly selected processes for newmulticast messages. Here instead of message a query is passed which quries from other processes that wether they have recieved new message since last message was recieved from a process. 
+
+Analysis of Gossip Protocol:
+
+1. Reliable : All nodes will be infected after some time
+2. Low Latency : All nodes will be inected after clog(n) time.
+3. Lightweight : Each node sends copy of message no more than cblog(n) times. 
+
+Fault Tolerance: 
+1. Packet loss: For 50% packet loss double the time it will take to send message to all nodes. We can see this by replacing b by b/2 which inturns increases the number of rounds to twice. 
+2. Node Failure: For 50% of node fails the time required will double as effective from replacing n by n/2. Same for number of rounds as above. 
+
+-> Topology aware gossip protocol: Gossip protocol knows the topology. When sending message across network it sends message to nodes inside network with 1-1/n probability and nodes outside network with 1/n probability. 
+

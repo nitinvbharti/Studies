@@ -33,3 +33,58 @@ Fault Tolerance:
 
 -> Topology aware gossip protocol: Gossip protocol knows the topology. When sending message across network it sends message to nodes inside network with 1-1/n probability and nodes outside network with 1/n probability. 
 
+* Membership Protocol: 
+
+Each process in a group of process has a membership list that has list of all process or some process executing in the group. The membership protocol keeps this list upadated as processes join, terminates abruplty or leaves. This protocol uses unreliable communication which can drop packet or delay packet delivery.
+
+1. Strongly consistent: Keeps a list of all processes running in the system. eg. Virtual Synchrony
+2. Weakly consistent: Keeps almost complete list of running processes. eg. Gossip, SWIM etc.**
+3. Other Systems: Partial random list. 
+
+Two Sub protocol:
+
+1. Dissiminate: Dissiminates processes that join or leave
+2. Failure: Detects failures
+
+- Currently no detectors are complete and accurate. Time to detect failures must be low. It should be scalable.
+
+=> Centralized Heartbeating:
+Sends periodic heartbeat to other process. Heartbeat is message that contains sequence number. If process does not recieve any heartbeat message for some time then the process is marked as failed. In centralized heartbeating all other processes sends heartbeat to 1 process. When pj fails there is no knowledge of who will detect the failure of this process. Also there is huge traffic of message at central process that it has to deal with.
+
+=>Ring Heartbeat: 
+Every process sends heartbeat to 1 neighbour(left /right) in a ring based network. If heartbeat is not recieved the process is marked as failed. Better than centralized. When multiple failures it might miss some of the failures. When a process fails repairing the network is also an overhead. 
+
+=> All to all Heartbeating:
+Each process sends heartbeat to all other processes. If one process does not sends its heartbeat it is marked as failed. It detects all failures but network traffic is very high. A slow process will mark all other process a failed due to delay in recieving packets due to which its accuracy is low ie. high false positives. 
+
+=> Analysis: 
+
+1. A single heartbeat takes O(log(N)) time to propagate. 
+2. For N heartbeats :
+	- It takes O(log(N)) time to propagate if bandwidth allowed is O(N)
+	- It takes O(N log(N)) time to propagate if band width allowed is O(1)
+
+- An entry for process is not deleted as soon after the wait time elapses as it may lead to ping-pong between process tables as 1 may see at new process when it recieves a heartbeat when other deletes it. It keeps the entry for another T_cleanup time before removing it when any process fails. 
+
+* Failure detector properties:
+
+1. Completeness: Guarantee failure gets detected always.  
+2. Accuracy: Probability of mistake in time T. Implies incorrect judgements of failures in time time T. (PM(T))
+3. Speed: Time to detection must be low(T).
+4. Sacle: Equal load on each member. 
+
+=> Optimal failure detector:
+Number of messages to be sent by every node in worst case : log(PM(T))/log(p_ml)
+where p_ml is Independent message loss probability.
+Worst case load :
+L* = log(PM(T))/(log(p_ml*T))
+
+This is independent of N number of messages. All-to-all heartbeating is O(N/T). This is due to the fact that each process  ne tries to detect failures independentently and does not distinguish Failure detection and dissemination components.
+
+For optimal failure detector :
+- Separate Failure detectection and dissemination
+- Use non heartbeat based failure detection system
+
+=> Probabilistic failure detector: 
+
+Instead of heartbeating rivers are used which is pinging. 

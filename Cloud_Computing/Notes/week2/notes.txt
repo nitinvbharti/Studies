@@ -85,6 +85,34 @@ For optimal failure detector :
 - Separate Failure detectection and dissemination
 - Use non heartbeat based failure detection system
 
-=> Probabilistic failure detector: 
+=> SWIM- Probabilistic failure detector: 
 
-Instead of heartbeating rivers are used which is pinging. 
+Instead of heartbeating rivers are used which is pinging. A process p_i sends ping periodically after T time to process p_j which responds with an ack to acknowledge that it is still running. If p_i does not recieve ack from the process p_j then it chooses k other processes and sends them request to get ping. These k processes sends ping to process p_j and when they recieve ack from p_j, this ack is sent to p_i. If p_i recieves ack from anyone of the k process it marks p_j is still running. If no one recieves ack from process p_j then p_j is marked as failed.
+
+- First detection time: Constant, independent of groupsize
+- Process load: Constant per period
+- Complete and deterministic time bounded O(log(N)) period
+
+* GRIDS:
+
+Using a set of avaialable work systems to perform huge computations. Highly efficient of DAG jobs where lot of processes can be run prarallely ainstructions can be parallelized as the processes need no communication between each other.
+
+=> HTCondor:
+This is an Intra-site protocol. 
+- High throughput computing system from Univ. Wisconsin 
+- Belongs to class of cycle scavenging systems
+- Runs on lot of workstations
+- When workstations are free, ask site's central server system for tasks 
+- Whenever mouse click or movement is encountered kill task or rechedule it on other workstation
+- Can also use dedicated machines to run tasks
+
+=> Globus: Inter-site protocol
+
+- Deals with External allocation and scheduling 
+- Takes care of Staging in an out of files
+Components:
+1. GridFTP: Wide area transfer of bulk data
+2. GRAM5: Grid Resource Allocation Manager. Performs submit, locate, cancel and manage jobs. Not a scheduler. It communicates with the schedulers like Condor.
+3. RLS: Replica Location Service: Naming service that translates name of file/dir of user to target location on server. 
+4. XIO: Library to provide standard IO functionalities.
+5. GSI: Grid security infrastructure. 

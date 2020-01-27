@@ -1,0 +1,85 @@
+* Peer 2 Peer systems: 
+
+- First distributed system that focused on scalablity with respect to number of nodes.
+
+=> Napster:
+
+- Each user runs network client
+- Napster runs servers that stores file informations shared by clients
+- To get the speed at which the file can be downloaded from the client that is sharing the file a ping is made to the client to estimate the bandwidth of the network which is directly downloaded from the host
+
+Steps: 
+
+1. Query: Client to server
+2. Search: All server search their lists 
+3. Response: Ip of the hosts having the file
+4. Ping: Ping to get bandwidth of the hosts
+5. Download: From the best host
+
+Issues:
+- Servers are centralized due which congestions can happen at server
+- Also prone to single point of failue 
+- Plaint text messages and passwords in the network so no security
+
+=> Gnutella:
+- Eliminates the servers
+- Clients search and retrieve among themseleves and acts as server too
+- Every node knows about its neighbours in the network. This forms a graph
+
+Steps:
+1. Query: Search for item
+2. QueryHit: Search result is found at some peer
+3. Ping: To probe network for other peers
+4. Pong: Reply to the ping which containes address of another peer
+5. Push: Initiate file transfer
+
+- Every node keeps track of Decriptor ID of the packet so that when it comes back it can avoid resending it. So each message is sent only once.
+- TTL is used in each packet so that packets does not loop forever
+- QueryHit message retraces its path in the network
+- If the responder is behind a firewell the message will not get recieved
+- Push message is used to send message to responder behind firewall. Responder first establishes a TCP connection  at the IP address and port specified and then starts sending the file 
+- If requester is also behind firewall than gnutella gives up.
+- Ping-pong is used to update its neighbours/members list
+- 50% of the traffic is caused buy ping-pong messages
+
+=> FastTrack:
+
+- Hybrid between gnutella and Napster.
+- Some nodes are super nodes.
+- Similar graph structure as Gnutella
+- Super nodes keeps directory listings of nearby file names
+- Super nodes is selected by participation score
+- Search is faster and has less traffic as only super nodes has file listings 
+
+=> BitTorrent:
+- Keeps track of peers leaving and joining the network
+- For download, recieves a file with list of trackers 
+- From that peers can be known from which file blocks are downloaded
+- new peer is leecher some leechers also has blocks that can be downloaded
+- Limits number of neighbours to which concurrent uploads can happen
+
+=> Chord:
+
+- Uses Distributed hash table(Buckets of hashes)
+- O(log N): Memory,  Lookup Latency, #Number of messages for a lookup
+- Intelligent choice of negihbours to reduce latency and message of cost of routing
+- Peers are given ID using the SHA1 hash of info and they are arranged in cycle such that each peer knows about clockwise peer in the network in a ring in case of successor Peer Pointers
+- Finger Tables: In this each peer keeps track of peer in the ring with idex as i from 2^i such that the next peer id is more than or equal to the #+2^i. This allows faster distribution of message
+- Consistent hashing is used for getting id from SHA1 hash
+- Files id is also used from consitent hashing as above
+- Consistent Hashing: In this with K keys and N peers, each peer contains O(K/N) keys
+
+=> Pastry:
+- Assigns ids to peers samea s Chord
+- Maintainence of neighbours are different from the Chord
+- Uses Leaf set with prefix matching like Routing tables
+- When for same prefix there are multiple neighbours then neighbour with smallest RTT is chosen as neighbour
+- O(logN) memory and lookup cost
+
+=> Kelips:
+- We use "k affinity groups" where k ~ sqrt(N)
+- Each node is hashed to affinity groups which is obtained by "hash % k"
+- Each node knows all the nodes in the same affinity group and one node from every foreign affinity group
+- Files are stored at the peer sharing and every other node stores the information of the file and owner of the file. Avoids replication of files 
+- Lookup takes 1 hop O(1). First find the affinity group of the file then go to that affinity group from the neighbour
+- 

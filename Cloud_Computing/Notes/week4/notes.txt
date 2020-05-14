@@ -1,0 +1,120 @@
+* Cassandra:
+
+- Distributed key-value store
+- Intended to run in data centres
+- Key-value store uses distributed ring hash tables 
+- Cassandra places servers in a ring, in which the gets stored in the servers that are successors to its point on the ring
+- There is no routing in cassandra, of a server sees a request for a key it forwards the request to the server carrying the replica in the ring.
+- Coordinators know the location of the server that contains the key
+
+=> Replication strategy by Cassandra:
+
+-> Simple strategy: Two kinds of partioners are used:
+
+- Random Partinioner: Chord like hash partioners, where keys are hashed to point in the ring and then stored to the closest point in the ring or that segment itself.
+- Byte Ordered Partinioner: Assign ranges of keys to server. Need to maintain a table to preserve the ordering of the timestamp of the keys. It does not hash the key instead maps the key on the basis of timestamps
+
+-> Network Topology strategy:
+
+- Used for multi-datacentre deployments 
+- Supports two replica per data centre or three replica per data centre
+- Replica of one key is stored on diffrent rack in clockwise direction of the ring to prevent loss of data on disk failures.
+
+=> Snitches: Maps IPs to tracks and Data centres. 
+Types:
+- Simple snitch: Unaware of technology
+- Rack Inferring: Gusses rack or data centre from IP address. First octet is ignored. Second octet is used for data centre. Third for rack and fourth for node.
+- Property file snitch: Uses config file to store 
+- EC2 Snitch: uses EC@. EC2 region is DC and Availblity zone is rack
+
+=> Writes: Writes need to be lock free as write heavy and fast. Coordinator uses Partinioner to send the query to all replica nodes responsible for the keys. When certain nuber of nodes reply then write is considered to be complete. Is a replica is down coordinator writes to all other replicas. If all replicas are down then it writes to the buffer and stores buffer for few hours. 
+- Maintains one ring per data centres. Per data centre coordinator is elected to coordinate with other data centre.
+
+On recieving writes:
+
+1. Log the write in disk and commit log for failure recovery
+2. Make changes to appropriate memtable if present update else append the key. It is a cache that is searched by key. It is write back cahche as opposed to write through
+3. If memtable is full or really old the memtable is flushed to store in the disk. Stores index file that contains SSTable that contains key and position of data sstable. 
+4. Uses bloom filter to check if the key is present in the table. 
+
+=> Bloom Filter: Compact way of repsenting a set of items that is used to check if a key is present in the table in fast way. 
+- Checking for existence of the key is cheap
+- Some probability of false positives but never false negatives  
+
+Working:
+- It uses large BITMAP.
+- For each key k number of hashes are generated using hash functions which return values in range 0 - 2^n and all those k bits are set to 1. 
+- When checking for the key same process is repeated and if all the bits at the k hash values are 1 then key might be present in the table else not present.
+
+-> Compaction: To reduce the size of stored SSTables since a key can be present in multiple tables so they are merged and latest update is stored in merged table. Runs periodically on each server. 
+
+-> Deletion in Cassandra: Items are not deleted right away. Instead it is logged in tombstone and when compacting if the key is present in tombstone it is deleted. 
+
+=> Reads in Cassandra: Corrdinator contacts X replicas when query comes. The fastest replicas are chosen from past results. When replicas respond the data related to latest timestamp replica is sent. If different values is recived then also latest timestamp value is returned. Checks consistency and background and sends read repair if two values are different
+
+=> Membership in Cassandra: Any server can be coordinator. So all the servers need to maintain the list of all other servers. List needs to be updated automatically as servers join and leave. 
+
+- Cassandra uses gossip style membership protocol to share information among servers.
+
+* X-Cap Theorem: The magic value x for number of replicas.
+
+- X-cap theorem gives the number of replicas required. 
+- Distributed system can satisfy any of two from:
+1. consistency: All nodes have same data at any time
+2. Availblity: The data must be available all the time
+3. Partition tolerence: The system continues to work inspite of Network Partitions
+
+Note: Cassandra chooses availablity and partition tolerance. It has weaker form of consistency which is eventual consistency. 
+
+=> Eventual consistency:
+- When all the writes to a key stops then all the replicas of the key should have same value which is the latest timestamp over a period of time.
+- May still return stale values sometimes.
+
+=> Types of consistency level for writes:
+- ANY: Any server stores or chache writes, may not be replicas. Coordinator caches write and replies ACK to client. fastest
+- ALL: All replicas are updated and sends ACK. Slowest
+- ONE: At least one replica is updated and sends ACK. Faster than ALL slower than ANY
+- QUORUM: quorum across all replicas in all datacentres. Quorum refers to majority of servers in all available servers. Provides same consistency as ALL but faster.
+
+-> Same can be applied for reads with minimum number of replicas that replies with latest timestamp.
+
+- Number of replicas to be updated: 
+R: read replicas 
+W: write replicas 
+
+- Necessary conditions :
+1. R+W>N
+2. W>N/2
+
+- The value of R and W to be chosen based on application:
+1. W=1, R=1 : If very few reads and writes
+2. W=N, R=1: Heavy read workloads
+3. W=N/2+1, R=N/2+1: Great for write heavy workload.
+4. W=1, R=N: for write heavy workload with one client writing per key. Since no multiple clients writing each key. 
+
+=> Consistency Spectrum:
+
+- Ranges from Eventual(Faster reads and writes) to strong(more consitent data but slower). 
+1. Per-key sequential: Per key, all operations have a global order,i.e., read and writes are sequential timestamp order.
+2. CRDTs: Commutative replicated data types. Data structures for which commutated writes give same results. eg: Counters. Any two writes will increase the value by 2 only in any order. No need to order writes. 
+3. Red-Blue consistency: Some operations required to be ordered in the same order. Orders are separated into two operations read and blue. Blue operations can be commutated in any order across DCs. Red operations needs to be executed in same order across data centres. 
+4. Causal: Reads must respect partial order based on information flow. Casually preceds order.
+5. Strong Consistency model:  
+- Linearizablity: Each operations by a client is visible instantaneously to all other clients.
+- Sequential Consistency: The result of any execution is same as if the operations are performed in a sequential order and all operations appears to be in sequence as specified in the program.
+
+=> HBase: Architecture of NoSQL. 
+- API functions: Get or Put for key values. Scan (range queries). Multiput.
+- HBase prefers "consistency" over "availablity".
+
+-> HBase Table:
+1. HBase table is split into multiple regions so that one large file not stored at one place, replicated across servers . 
+2. Column Family: Subset of columns with similar query patters. Column of the table.
+3. Store: One store per combination of column family and region.
+4. Memstore: For each store: in-memory latest updates to store. Flushed to disk when memstore is full
+5. Store Files: for each store for each regions where actual data lives.  which is stored in HDFS. Hadoop distributed file system
+6. HFile: the SSTable 
+
+- HBase supports strong consistency due to wrtie ahead logs, known as HLog. All write query is first logged into HLog and then written in memstore which gets dumped into store file when it is full.
+
+- HBase has single master cluster and other slave cluster performs replications of the tables. Coordination among cluster is reached via Zoo keeper.

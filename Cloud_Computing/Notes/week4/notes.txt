@@ -118,3 +118,41 @@ W: write replicas
 - HBase supports strong consistency due to wrtie ahead logs, known as HLog. All write query is first logged into HLog and then written in memstore which gets dumped into store file when it is full.
 
 - HBase has single master cluster and other slave cluster performs replications of the tables. Coordination among cluster is reached via Zoo keeper.
+
+
+* Time and Ordering:
+
+- Time synchronization is required for both correctness and fairness. 
+- synchronization is challenging as each system has its own clock.
+- Clock skew: Relative difference in clock values
+- Clock Drift: Relative difference in the clock frequencies 
+- External synchronization: Each process's clock is in bound D of external outside clock S. eg: Christian and NTP algorithm
+- Internal synchronization: Every pair process's clock is in bound D pair wise to every other clock. eg: Berkley algorithm
+
+-> Christian's Algorithm: Type of external time synchronization. All process P is in synchronization with external clock S bounded by D.
+- Each process request time from S and sets its own time to that. This suffers from Network delay which will not be the same time as of S. 
+- To fix this it measures RTT of the message and subtrats from the time received
+- The time set is in range between [t+min1,t+RTT-min2], where min1 is time taken from P->S and min2 is time from S->P.
+- Clock can never be set to time less than current time 
+
+-> NTP: Network time protocol. NTP servers are organised in a tree. Each leaf is a client. Each node in the tree synchronises with its parents in the tree. 
+- Child sends message to its parent for request of time. The parent replies with time and saves the send time as ts1. The child revieves the message and saves the reveive time as tr1. Then child sends second message and saves time as ts2. The parent receives the second message and saves the receiving time as tr2 and sends the value of ts1 and tr2 to the child. 
+- Offset o = (tr1-tr2+ts2-ts1)/2
+
+-> Lamport timestamps: Uses Happens before relationship.
+Happens Before relationship between events follows three rules:
+1. The events occur on same process, a ->(HB) b, if timestamp(a)<timestamp(b)
+2. IF p1 sends m to p2: send(m)<receive(m).
+3. Transitive property: if a->b and b->c then a->c.
+This creates a partial order among events.
+
+- Assign logical timestams to each event. Each process uses a counter as a clock. At each execution of action the counter is increased by 1. On send event the timestamp of process is also along the message. The receiving process updates its timestamp by max of the two timestamp so that causality order is preserved.
+- The events that occur with same timestamp are concurrent events.
+
+-> Vector Clocks: Each process uses a vector of integer clocks for each process. Space requirement: N^2.
+- Rules of updating vector clocks are similar to normal clock.
+1. Each time a process performs an action it increases its own local vector clock and not any other process clock it has saved. 
+2. On send event the vector clock of the sender is sent along with message.
+3. On receiving the message the process increments its vector clock and updates all other values by choosing the maximum of the values from senders vector clock.
+- Vector clocks obey causality. Two events are Casually related iff VT1 < VT2. Two events are concurrent when the timestamps cannot be ordered.
+

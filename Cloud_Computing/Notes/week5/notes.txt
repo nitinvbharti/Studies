@@ -1,0 +1,49 @@
+* Global Snapshot:
+
+- It is a checkpoint in a system of processes and channels which is saved in case the system fails. 
+- It also helps in garbage collection. The objects which do not have any pointers to them. 
+- Helps in deadlock detection. 
+
+=> Global Snapshot algorithm:
+
+- Record a global snapshot which includes the state of each process and each channel. 
+-> Sytem model:
+
+- N processes in system
+- each pair of processes have two uni-directional channel between them 
+- Communications in channel is FIFO ordered
+- No failures and no message drop
+
+-> Requirements:
+
+- No intereference in operations of processes
+- Each process should be able to record its own state
+- Global state needs to be collected in distributed manner
+- Any process may initiate the snapshot
+
+=> Candy-Lamport Global Snapshot algorithm:
+
+- First initiator process records its own state
+- Then initiator process creates special message called "Marker" message which does not interfere with other process working and is treated as normal process i.e. it is still time ordered to its previous message
+- Starts recording the state of other process through incoming channels
+- When a process receives a marker message it records its own state and marks the channel it received the marker from as empty if the marker message is received for the first time.
+- Then the process starts sending this marker message on other outgoing channels and starts recording the states from the incoming channels excpet from the channel it received the message from
+- If duplicate marker message is received then the state of the channel C_ki is marked with all the message it has received since activating the listening these are considered as state of the channel while the process was listening. 
+- algorithm terminates when all the processes has received one marker message and all channels have seen one marker message to make sure all channels states has been recorded.
+
+* Consitent cuts:
+
+- Cut is time frontier at each process and each channel
+- Events at the process or in the channel that happens before the cut are "in the cut" and the events that happen after the cut are "out of cut"
+- A cut is consitent cut if the all the events in the cut follows happens before relationship
+- Chandy-Lamport global snapshot algorithm always gives a consistent cut.
+
+* Correctness: 
+Two parts:
+
+1. Liveness: Something good will happen eventually. eg: A computation will always complete. Every failure will be detected.
+2. Safety: Something bad will never happen in the system. eg: There is no deadlock in distributed transactions. No orphan objects. Accuracy in failure detectors. 
+
+- It can be difficult to guarantee both liveness and safety. eg:
+1. Failure detector: Completeness and Accuracy can not both be guranteed by a failure detector in asynchronous sytem.
+2. Concensus: Decisions and correct Decisions cannot both be guranteed in an asynchronous system.
